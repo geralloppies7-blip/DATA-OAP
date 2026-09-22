@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laporan Data OAP - Dukcapil Kabupaten Asmat 2026</title>
+<link rel="icon" type="image/png" href="logo-asmat.png">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: #f0f2f5; color: #333; line-height: 1.5;
+  }
+
+  /* ========== KOP SURAT ========== */
+  .kop {
+    background: white; border-bottom: 4px double #1F4E78;
+    padding: 20px 40px; display: flex; align-items: center; gap: 20px;
+  }
+  .kop .logo-img {
+    width: 80px; height: 80px; object-fit: contain; flex-shrink: 0;
+  }
+  .kop .teks { flex: 1; text-align: center; }
+  .kop .teks h1 {
+    font-size: 16px; color: #1F4E78;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .kop .teks h2 {
+    font-size: 20px; color: #1F4E78;
+    text-transform: uppercase; font-weight: bold; margin: 3px 0;
+  }
+  .kop .teks p { font-size: 11px; color: #666; font-style: italic; }
+
+  /* ========== HEADER LAPORAN ========== */
+  .header-laporan {
+    background: linear-gradient(135deg, #8B4513, #D2691E);
+    color: white; padding: 30px 40px; text-align: center;
+  }
+  .header-laporan h1 { font-size: 20px; margin-bottom: 8px; }
+  .header-laporan .info {
+    display: flex; flex-wrap: wrap; justify-content: center;
+    gap: 10px; margin-top: 12px;
+  }
+  .header-laporan .badge {
+    background: rgba(255,255,255,0.2);
+    padding: 5px 15px; border-radius: 20px; font-size: 12px;
+  }
+  .header-laporan .badge.kode {
+    background: #FFD966; color: #8B4513; font-weight: bold;
+  }
+
+  /* ========== CONTAINER ========== */
+  .container { max-width: 1400px; margin: 0 auto; padding: 25px 20px; }
+
+  /* ========== SECTION ========== */
+  .section {
+    background: white; border-radius: 10px; padding: 22px 25px;
+    margin-bottom: 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  }
+  .section h3 {
+    color: #8B4513; font-size: 15px; padding-bottom: 10px;
+    margin-bottom: 18px; border-bottom: 3px solid #8B4513;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  /* ========== STAT CARDS ========== */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+  }
+  .card {
+    padding: 15px; border-radius: 8px; background: #f8f9fa;
+    border-left: 5px solid #8B4513; transition: transform 0.15s;
+  }
+  .card:hover { transform: translateY(-2px); }
+  .card.brown { border-left-color: #8B4513; background: #F5E6D3; }
+  .card.orange { border-left-color: #D2691E; background: #FFF3E0; }
+  .card.green { border-left-color: #4CAF50; background: #E8F5E9; }
+  .card.red { border-left-color: #E53935; background: #FFEBEE; }
+  .card.blue { border-left-color: #2E75B6; background: #E7F0F9; }
+  .card.purple { border-left-color: #9C27B0; background: #F3E5F5; }
+  .card.teal { border-left-color: #009688; background: #E0F2F1; }
+  .card.gray { border-left-color: #9E9E9E; background: #F5F5F5; }
+  .card-label {
+    font-size: 10px; color: #666; text-transform: uppercase;
+    letter-spacing: 0.5px; margin-bottom: 6px; font-weight: 600;
+  }
+  .card-value {
+    font-size: 24px; font-weight: bold; color: #8B4513;
+    line-height: 1; margin-bottom: 4px;
+  }
+  .card-sub { font-size: 10px; color: #888; }
+
+  /* ========== GRID ========== */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+  @media (max-width: 900px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+  .chart-wrapper {
+    background: #fafbfc; padding: 15px; border-radius: 8px;
+    border: 1px solid #eee;
+  }
+  canvas { max-height: 350px; }
+
+  /* ========== TABEL ========== */
+  table {
+    width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px;
+  }
+  thead { background: #8B4513; color: white; }
+  th, td { padding: 10px 12px; text-align: left; border: 1px solid #ddd; }
+  th { font-weight: 600; text-align: center; font-size: 11px; }
+  tbody tr:nth-child(even) { background: #f8f9fa; }
+  tbody tr:hover { background: #F5E6D3; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.center { text-align: center; }
+  tfoot { background: #FFD966; font-weight: bold; }
+  tfoot td { border: 1px solid #999; }
+
+  /* ========== BADGE ========== */
+  .badge-status {
+    display: inline-block; padding: 3px 10px;
+    border-radius: 12px; font-size: 10px; font-weight: bold;
+  }
+  .badge-high { background: #4CAF50; color: white; }
+  .badge-medium { background: #FF9800; color: white; }
+  .badge-low { background: #E53935; color: white; }
+
+  /* ========== INFO BOX ========== */
+  .info-box {
+    background: #F5E6D3; border-left: 5px solid #8B4513;
+    padding: 12px 18px; border-radius: 6px; margin: 15px 0; font-size: 12px;
+  }
+  .info-box strong { color: #8B4513; }
+  .info-box.warning {
+    background: #FFF3E0; border-left-color: #FF9800;
+  }
+  .info-box.warning strong { color: #E65100; }
+
+  /* ========== TTD ========== */
+  .ttd {
+    display: flex; justify-content: space-between;
+    margin-top: 30px; padding-top: 15px;
+  }
+  .ttd-box { text-align: center; width: 45%; }
+  .ttd-box p { font-size: 12px; margin-bottom: 60px; }
+  .ttd-box .nama {
+    font-weight: bold; border-top: 1px solid #333;
+    padding-top: 5px; display: inline-block; min-width: 180px;
+  }
+
+  /* ========== FOOTER ========== */
+  .footer {
+    background: #8B4513; color: white;
+    padding: 18px; text-align: center; font-size: 11px;
+  }
+
+  @media print {
+    body { background: white; }
+    .section { box-shadow: none; border: 1px solid #ddd; page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- KOP SURAT -->
+<div class="kop">
+  <img src="logo-asmat.png" alt="Logo Kabupaten Asmat" class="logo-img">
+  <div class="teks">
+    <h1>Pemerintah Kabupaten Asmat</h1>
+    <h2>Dinas Kependudukan dan Pencatatan Sipil</h2>
+    <p>Jalan Yos Sudarso, Agats, Kabupaten Asmat, Papua Selatan</p>
+  </div>
+</div>
+
+<!-- HEADER LAPORAN -->
+<div class="header-laporan">
+  <h1>LAPORAN DATA ORANG ASLI PAPUA (OAP)</h1>
+  <p style="font-size: 12px; opacity: 0.9;">Dinas Kependudukan dan Pencatatan Sipil Kabupaten Asmat</p>
+  <div class="info">
+    <span class="badge">📅 Semester I Tahun 2026</span>
+    <span class="badge">🗓️ Periode: 30 Juni 2026</span>
+    <span class="badge kode">🔖 Sumber: SIRIOS & SIAK</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- SECTION I: RINGKASAN OAP -->
+  <div class="section">
+    <h3>👥 I. Ringkasan Data OAP</h3>
+    <div class="cards">
+      <div class="card brown">
+        <div class="card-label">Total Penduduk</div>
+        <div class="card-value" id="totalPenduduk">-</div>
+        <div class="card-sub">jiwa</div>
+      </div>
+      <div class="card orange">
+        <div class="card-label">Total OAP</div>
+        <div class="card-value" id="totalOAP">-</div>
+        <div class="card-sub" id="pctOAP">-</div>
+      </div>
+      <div class="card green">
+        <div class="card-label">OAP Laki-laki</div>
+        <div class="card-value" id="oapL">-</div>
+        <div class="card-sub" id="pctOAPL">-</div>
+      </div>
+      <div class="card red">
+        <div class="card-label">OAP Perempuan</div>
+        <div class="card-value" id="oapP">-</div>
+        <div class="card-sub" id="pctOAPP">-</div>
+      </div>
+      <div class="card blue">
+        <div class="card-label">Non-OAP</div>
+        <div class="card-value" id="nonOAP">-</div>
+        <div class="card-sub" id="pctNonOAP">-</div>
+      </div>
+      <div class="card purple">
+        <div class="card-label">Rasio OAP L/P</div>
+        <div class="card-value" id="rasioOAP">-</div>
+        <div class="card-sub">per 100 perempuan</div>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <strong>📌 Definisi OAP:</strong> Orang Asli Papua adalah penduduk yang berasal dari ras Melanesia,
+      terdiri dari suku-suku asli di wilayah Provinsi Papua dan Papua Barat. Data OAP bersumber dari
+      <strong>SIRIOS</strong> (Sistem Informasi Orang Asli Papua Selatan) yang terintegrasi dengan SIAK.
+    </div>
+  </div>
+
+  <!-- SECTION II: STATISTIK PELAYANAN OAP -->
+  <div class="section">
+    <h3>📊 II. Statistik OAP per Kategori</h3>
+    <div class="cards">
+      <div class="card teal">
+        <div class="card-label">OAP Usia 0-14</div>
+        <div class="card-value" id="oapUsia014">-</div>
+        <div class="card-sub" id="pctUsia014">-</div>
+      </div>
+      <div class="card green">
+        <div class="card-label">OAP Usia Produktif</div>
+        <div class="card-value" id="oapProduktif">-</div>
+        <div class="card-sub" id="pctProduktif">-</div>
+      </div>
+      <div class="card orange">
+        <div class="card-label">OAP Usia 65+</div>
+        <div class="card-value" id="oapLansia">-</div>
+        <div class="card-sub" id="pctLansia">-</div>
+      </div>
+      <div class="card purple">
+        <div class="card-label">OAP Wajib KTP</div>
+        <div class="card-value" id="oapWajibKTP">-</div>
+        <div class="card-sub">usia 17+</div>
+      </div>
+      <div class="card blue">
+        <div class="card-label">OAP Punya KTP</div>
+        <div class="card-value" id="oapPunyaKTP">-</div>
+        <div class="card-sub" id="pctOapKTP">-</div>
+      </div>
+      <div class="card brown">
+        <div class="card-label">OAP ASN/CPNS</div>
+        <div class="card-value" id="oapASN">-</div>
+        <div class="card-sub">pegawai aktif</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION III: GRAFIK -->
+  <div class="section">
+    <h3>📈 III. Visualisasi Data OAP</h3>
+    <div class="grid-2">
+      <div class="chart-wrapper">
+        <canvas id="chartPieOAP"></canvas>
+      </div>
+      <div class="chart-wrapper">
+        <canvas id="chartUsiaOAP"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION IV: GRAFIK OAP PER DISTRIK -->
+  <div class="section">
+    <h3>🏘️ IV. Sebaran OAP per Distrik</h3>
+    <div class="chart-wrapper">
+      <canvas id="chartDistrikOAP"></canvas>
+    </div>
+  </div>
+
+  <!-- SECTION V: TABEL OAP PER DISTRIK -->
+  <div class="section">
+    <h3>📋 V. Tabel Rekapitulasi OAP per Distrik</h3>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>No</th>
+            <th>Distrik</th>
+            <th>Total Penduduk</th>
+            <th>OAP L</th>
+            <th>OAP P</th>
+            <th>Total OAP</th>
+            <th>Non-OAP</th>
+            <th>% OAP</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+        <tfoot id="tfoot"></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- SECTION VI: PROGRAM PEMBANGUNAN OAP -->
+  <div class="section">
+    <h3>🎯 VI. Program & Kebijakan OAP</h3>
+    <div class="grid-2">
+      <div>
+        <h4 style="color: #8B4513; margin-bottom: 10px; font-size: 13px;">A. Program Pemerintah</h4>
+        <ul style="padding-left: 20px; font-size: 12px; line-height: 1.8;">
+          <li><strong>Alokasi CPNS OAP</strong> — 196 formasi (79,23%) dari total 248 alokasi 2024.</li>
+          <li><strong>Modal UMKM OAP</strong> — 995 pelaku usaha, total Rp4.440.500.000 (2025).</li>
+          <li><strong>Kupon Pasar Murah</strong> — 1.100 kupon OAP (2026).</li>
+          <li><strong>Bantuan Pendidikan</strong> — beasiswa untuk OAP berprestasi.</li>
+          <li><strong>Bantuan Kesehatan</strong> — akses layanan kesehatan gratis.</li>
+        </ul>
+      </div>
+      <div>
+        <h4 style="color: #8B4513; margin-bottom: 10px; font-size: 13px;">B. Data SIRIOS</h4>
+        <ul style="padding-left: 20px; font-size: 12px; line-height: 1.8;">
+          <li><strong>Status:</strong> Dalam tahap penguatan kapasitas SDM</li>
+          <li><strong>Target:</strong> Data OAP terpilah hingga tingkat kampung</li>
+          <li><strong>Cakupan:</strong> Integrasi data Dinkes + Dukcapil</li>
+          <li><strong>Estimasi:</strong> Selesai September 2026</li>
+          <li><strong>Fungsi:</strong> Basis data untuk program afirmasi OAP</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION VII: KESIMPULAN & TTD -->
+  <div class="section">
+    <h3>✍️ VII. Kesimpulan & Pengesahan</h3>
+
+    <div class="info-box">
+      <strong>A. Kesimpulan</strong>
+      <ol style="padding-left: 20px; margin-top: 10px;">
+        <li>Total penduduk Kabupaten Asmat mencapai <strong id="k1">-</strong> jiwa.</li>
+        <li>Jumlah OAP tercatat <strong id="k2">-</strong> jiwa (<span id="k3">-</span> dari total penduduk).</li>
+        <li>Komposisi OAP: <strong id="k4">-</strong> laki-laki dan <strong id="k5">-</strong> perempuan.</li>
+        <li>Distrik dengan OAP terbanyak: <strong id="k6">-</strong>.</li>
+        <li>Jumlah Non-OAP: <strong id="k7">-</strong> jiwa (<span id="k8">-</span>).</li>
+      </ol>
+    </div>
+
+    <div class="info-box warning">
+      <strong>B. Rekomendasi</strong>
+      <ol style="padding-left: 20px; margin-top: 10px;">
+        <li>Mempercepat pendataan OAP melalui SIRIOS hingga tingkat kampung.</li>
+        <li>Meningkatkan alokasi program afirmasi OAP di distrik dengan OAP minoritas.</li>
+        <li>Integrasi data OAP dengan program UMKM, pendidikan, dan kesehatan.</li>
+        <li>Validasi data OAP dengan tokoh adat dan pemerintah kampung.</li>
+      </ol>
+    </div>
+
+    <div class="ttd">
+      <div class="ttd-box">
+        <p>Mengetahui,<br>Bupati Asmat</p>
+        <div class="nama">(..............................)</div>
+      </div>
+      <div class="ttd-box">
+        <p>Agats, 30 Juni 2026<br>Kepala Dinas Dukcapil Asmat</p>
+        <div class="nama">(..............................)</div>
+        <p style="margin-top: 5px; font-size: 11px;">NIP. ..............................</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <p>© 2026 Dinas Kependudukan dan Pencatatan Sipil Kabupaten Asmat</p>
+  <p>Sumber: SIRIOS | SIAK | DKB Semester I 2026</p>
+</div>
+
+<script>
+// ============================================================
+// KONFIGURASI
+// ============================================================
+const LUAS_WILAYAH = 31983.44;
+
+// ============================================================
+// DATA OAP PER DISTRIK
+// Ganti angka dengan data riil dari SIRIOS/Dukcapil Asmat
+// Persentase OAP diasumsikan 94,39% dari total penduduk
+// ============================================================
+const PERSEN_OAP = 0.9439;
+
+const data = [
+  { no:1,  nama:"Agats",         L:8500, P:8100 },
+  { no:2,  nama:"Akat",          L:3200, P:3000 },
+  { no:3,  nama:"Aswi",          L:2100, P:2000 },
+  { no:4,  nama:"Atsy",          L:2800, P:2650 },
+  { no:5,  nama:"Ayip",          L:1500, P:1400 },
+  { no:6,  nama:"Betcbamu",      L:1800, P:1700 },
+  { no:7,  nama:"Der Koumur",    L:2200, P:2100 },
+  { no:8,  nama:"Fayit",         L:2600, P:2500 },
+  { no:9,  nama:"Jagu",          L:1900, P:1800 },
+  { no:10, nama:"Joutu",         L:1400, P:1350 },
+  { no:11, nama:"Joerat",        L:2300, P:2200 },
+  { no:12, nama:"Kolf Braza",    L:1700, P:1600 },
+  { no:13, nama:"Kopay",         L:2000, P:1900 },
+  { no:14, nama:"Pantai Kasuari",L:2500, P:2400 },
+  { no:15, nama:"Pulau Tiga",    L:1300, P:1250 },
+  { no:16, nama:"Safan",         L:1600, P:1550 },
+  { no:17, nama:"Sawa Erma",     L:2400, P:2300 },
+  { no:18, nama:"Sirets",        L:1200, P:1150 },
+  { no:19, nama:"Suator",        L:2700, P:2600 },
+  { no:20, nama:"Suru-suru",     L:1100, P:1050 },
+  { no:21, nama:"Unir Sirau",    L:2100, P:2050 },
+  { no:22, nama:"Jetsy",         L:1400, P:1300 },
+  { no:23, nama:"Sor Ep",        L:1800, P:1750 }
+];
+
+// ============================================================
+// DATA OAP PER KELOMPOK USIA
+// ============================================================
+const dataUsia = [
+  { kelompok:"0 - 14 tahun",  persen:40.03 },
+  { kelompok:"15 - 29 tahun", persen:26.27 },
+  { kelompok:"30 - 44 tahun", persen:18.80 },
+  { kelompok:"45 - 59 tahun", persen:11.42 },
+  { kelompok:"60 - 64 tahun", persen:1.67 },
+  { kelompok:"65+ tahun",     persen:1.81 }
+];
+
+// ============================================================
+// DATA PROGRAM OAP
+// ============================================================
+const programOAP = {
+  asn: 196,
+  umkm: 995,
+  modalUMKM: 4440500000,
+  kuponPasarMurah: 1100,
+  alokasiTotal: 248
+};
+
+// ============================================================
+// FORMAT ANGKA
+// ============================================================
+const fmt = n => new Intl.NumberFormat('id-ID').format(Math.round(n));
+const fmtRp = n => "Rp" + new Intl.NumberFormat('id-ID').format(n);
+
+// ============================================================
+// HITUNG TOTAL
+// ============================================================
+function hitungTotal() {
+  let tL=0, tP=0;
+  data.forEach(d => {
+    d.total = d.L + d.P;
+    d.oapL = Math.round(d.L * PERSEN_OAP);
+    d.oapP = Math.round(d.P * PERSEN_OAP);
+    d.totalOAP = d.oapL + d.oapP;
+    d.nonOAP = d.total - d.totalOAP;
+    d.persenOAP = d.total > 0 ? (d.totalOAP / d.total * 100) : 0;
+    tL += d.oapL; tP += d.oapP;
+  });
+  const totalOAP = tL + tP;
+  const totalPenduduk = data.reduce((a,b) => a + b.total, 0);
+  return {
+    tL, tP, totalOAP, totalPenduduk,
+    nonOAP: totalPenduduk - totalOAP,
+    pctOAP: totalPenduduk > 0 ? (totalOAP / totalPenduduk * 100) : 0
+  };
+}
+
+// ============================================================
+// RENDER KARTU
+// ============================================================
+function renderCards() {
+  const t = hitungTotal();
+  document.getElementById('totalPenduduk').textContent = fmt(t.totalPenduduk);
+  document.getElementById('totalOAP').textContent = fmt(t.totalOAP);
+  document.getElementById('oapL').textContent = fmt(t.tL);
+  document.getElementById('oapP').textContent = fmt(t.tP);
+  document.getElementById('nonOAP').textContent = fmt(t.nonOAP);
+
+  document.getElementById('pctOAP').textContent = t.pctOAP.toFixed(2) + '% dari penduduk';
+  document.getElementById('pctOAPL').textContent =
+    (t.totalOAP > 0 ? (t.tL / t.totalOAP * 100).toFixed(2) : 0) + '% dari OAP';
+  document.getElementById('pctOAPP').textContent =
+    (t.totalOAP > 0 ? (t.tP / t.totalOAP * 100).toFixed(2) : 0) + '% dari OAP';
+  document.getElementById('pctNonOAP').textContent =
+    (100 - t.pctOAP).toFixed(2) + '% dari penduduk';
+  document.getElementById('rasioOAP').textContent =
+    (t.tP > 0 ? (t.tL / t.tP * 100).toFixed(2) : 0);
+
+  // Statistik per kategori
+  document.getElementById('oapUsia014').textContent = fmt(t.totalOAP * 0.4003);
+  document.getElementById('pctUsia014').textContent = '40,03% dari OAP';
+  document.getElementById('oapProduktif').textContent = fmt(t.totalOAP * 0.5649);
+  document.getElementById('pctProduktif').textContent = '56,49% dari OAP';
+  document.getElementById('oapLansia').textContent = fmt(t.totalOAP * 0.0348);
+  document.getElementById('pctLansia').textContent = '3,48% dari OAP';
+  document.getElementById('oapWajibKTP').textContent = fmt(t.totalOAP * 0.59);
+  document.getElementById('oapPunyaKTP').textContent = fmt(t.totalOAP * 0.585);
+  document.getElementById('pctOapKTP').textContent = '99,15% cakupan';
+  document.getElementById('oapASN').textContent = fmt(programOAP.asn);
+}
+
+// ============================================================
+// RENDER TABEL
+// ============================================================
+function renderTabel() {
+  const t = hitungTotal();
+  let html = '';
+  data.forEach(d => {
+    const statusClass = d.persenOAP >= 95 ? 'badge-high' :
+                       d.persenOAP >= 85 ? 'badge-medium' : 'badge-low';
+    const statusText = d.persenOAP >= 95 ? '✓ Dominan OAP' :
+                      d.persenOAP >= 85 ? '● Mayoritas OAP' : '! Perhatian';
+    html += `<tr>
+      <td class="center">${d.no}</td>
+      <td><b>${d.nama}</b></td>
+      <td class="num">${fmt(d.total)}</td>
+      <td class="num" style="color:#8B4513;">${fmt(d.oapL)}</td>
+      <td class="num" style="color:#8B4513;">${fmt(d.oapP)}</td>
+      <td class="num"><b style="color:#8B4513;">${fmt(d.totalOAP)}</b></td>
+      <td class="num" style="color:#2E75B6;">${fmt(d.nonOAP)}</td>
+      <td class="num"><b>${d.persenOAP.toFixed(2)}%</b></td>
+      <td class="center"><span class="badge-status ${statusClass}">${statusText}</span></td>
+    </tr>`;
+  });
+  document.getElementById('tbody').innerHTML = html;
+
+  document.getElementById('tfoot').innerHTML = `<tr>
+    <td colspan="2" class="center">TOTAL</td>
+    <td class="num">${fmt(t.totalPenduduk)}</td>
+    <td class="num">${fmt(t.tL)}</td>
+    <td class="num">${fmt(t.tP)}</td>
+    <td class="num">${fmt(t.totalOAP)}</td>
+    <td class="num">${fmt(t.nonOAP)}</td>
+    <td class="num">${t.pctOAP.toFixed(2)}%</td>
+    <td class="center">-</td>
+  </tr>`;
+}
+
+// ============================================================
+// RENDER KESIMPULAN
+// ============================================================
+function renderKesimpulan() {
+  const t = hitungTotal();
+  const distrikMax = [...data].sort((a,b) => b.totalOAP - a.totalOAP)[0];
+
+  document.getElementById('k1').textContent = fmt(t.totalPenduduk);
+  document.getElementById('k2').textContent = fmt(t.totalOAP);
+  document.getElementById('k3').textContent = t.pctOAP.toFixed(2) + '%';
+  document.getElementById('k4').textContent = fmt(t.tL);
+  document.getElementById('k5').textContent = fmt(t.tP);
+  document.getElementById('k6').textContent = distrikMax.nama + ' (' + fmt(distrikMax.totalOAP) + ' jiwa)';
+  document.getElementById('k7').textContent = fmt(t.nonOAP);
+  document.getElementById('k8').textContent = (100 - t.pctOAP).toFixed(2) + '%';
+}
+
+// ============================================================
+// GRAFIK PIE OAP vs NON-OAP
+// ============================================================
+function renderPieOAP() {
+  const t = hitungTotal();
+  new Chart(document.getElementById('chartPieOAP'), {
+    type: 'doughnut',
+    data: {
+      labels: ['OAP', 'Non-OAP'],
+      datasets: [{
+        data: [t.totalOAP, t.nonOAP],
+        backgroundColor: ['#8B4513', '#2E75B6'],
+        borderWidth: 2, borderColor: '#fff'
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom' },
+        title: {
+          display: true,
+          text: 'Komposisi OAP vs Non-OAP',
+          color: '#8B4513', font: { size: 13 }
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+              const pct = (ctx.parsed / total * 100).toFixed(2);
+              return `${ctx.label}: ${fmt(ctx.parsed)} (${pct}%)`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+// ============================================================
+// GRAFIK USIA OAP
+// ============================================================
+function renderUsiaOAP() {
+  const t = hitungTotal();
+  new Chart(document.getElementById('chartUsiaOAP'), {
+    type: 'bar',
+    data: {
+      labels: dataUsia.map(d => d.kelompok),
+      datasets: [{
+        label: 'Jumlah OAP',
+        data: dataUsia.map(d => Math.round(t.totalOAP * d.persen / 100)),
+        backgroundColor: [
+          '#8B4513', '#A0522D', '#CD853F',
+          '#D2691E', '#DEB887', '#F5DEB3'
+        ],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      indexAxis: 'y',
+      plugins: {
+        legend: { display: false },
+        title: {
+          display: true,
+          text: 'Komposisi OAP per Kelompok Usia',
+          color: '#8B4513', font: { size: 13 }
+        },
+        tooltip: {
+          callbacks: { label: ctx => fmt(ctx.parsed.x) + ' jiwa' }
+        }
+      },
+      scales: {
+        x: { beginAtZero: true, ticks: { callback: v => fmt(v) } },
+        y: { ticks: { font: { size: 10 } } }
+      }
+    }
+  });
+}
+
+// ============================================================
+// GRAFIK SEBARAN OAP PER DISTRIK
+// ============================================================
+function renderDistrikOAP() {
+  new Chart(document.getElementById('chartDistrikOAP'), {
+    type: 'bar',
+    data: {
+      labels: data.map(d => d.nama),
+      datasets: [
+        {
+          label: 'OAP Laki-laki',
+          data: data.map(d => d.oapL),
+          backgroundColor: 'rgba(139, 69, 19, 0.8)',
+          borderColor: '#8B4513', borderWidth: 1
+        },
+        {
+          label: 'OAP Perempuan',
+          data: data.map(d => d.oapP),
+          backgroundColor: 'rgba(210, 105, 30, 0.8)',
+          borderColor: '#D2691E', borderWidth: 1
+        },
+        {
+          label: 'Non-OAP',
+          data: data.map(d => d.nonOAP),
+          backgroundColor: 'rgba(46, 117, 182, 0.6)',
+          borderColor: '#2E75B6', borderWidth: 1
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'top' },
+        title: {
+          display: true,
+          text: 'Sebaran OAP vs Non-OAP per Distrik',
+          color: '#8B4513', font: { size: 13 }
+        },
+        tooltip: {
+          callbacks: { label: ctx => `${ctx.dataset.label}: ${fmt(ctx.parsed.y)} jiwa` }
+        }
+      },
+      scales: {
+        y: { beginAtZero: true, ticks: { callback: v => fmt(v) } },
+        x: { ticks: { font: { size: 9 }, maxRotation: 60 } }
+      }
+    }
+  });
+}
+
+// ============================================================
+// INIT
+// ============================================================
+renderCards();
+renderTabel();
+renderKesimpulan();
+renderPieOAP();
+renderUsiaOAP();
+renderDistrikOAP();
+</script>
+
+</body>
+</html>
